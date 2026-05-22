@@ -1,13 +1,15 @@
-name: Frontend CI/CD - Innovatech Chile
+name: Frontend CI/CD (Deploy to EC2 via SSH)
 
 on:
   push:
     branches:
-      - deploy  # Se activa al hacer push a la rama deploy
+      - deploy
 
 jobs:
-  build-and-push:
+  deploy-frontend:
+    name: Build & Deploy Frontend
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/deploy'
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
@@ -18,38 +20,41 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Construir y Subir Imagen Docker
+      - name: Construir y Subir Imagen Docker (Frontend)
         uses: docker/build-push-action@v5
         with:
+          # ➡️ Mantenemos el contexto en la raíz para que rastree todo el árbol
           context: .
-          file: ./Dockerfile
+          file: ./front_despacho/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/front_despacho:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/front-despacho:latest
 
-  deploy-to-ec2:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Despliegue automatizado en AWS EC2 vía SSH
+      - name: Despliegue en AWS EC2 vía SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.AWS_EC2_FRONT_IP }}
+          host: ${{ secrets.AWS_EC2_FRONTEND_IP }}
           username: ec2-user
           key: ${{ secrets.AWS_PRIVATE_KEY }}
+          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
           script: |
-            # 1. Iniciar sesión en Docker Hub dentro de la EC2
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+            export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
+            export DOCKERHUB_TOKEN="${{ secrets.DOCKERHUB_TOKEN }}"
+
+            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             
-            # 2. Detener y eliminar el contenedor anterior si existe
-            docker stop front_container || true
-            docker rm front_container || true
+            # Detener y eliminar contenedor antiguo si existe
+            docker stop frontend-container || true
+            docker rm frontend-container || true
             
-            # 3. Descargar la versión más reciente de la imagen
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/front_despacho:latest
+            # Descargar la nueva imagen construida por el pipeline
+            docker pull "$DOCKERHUB_USERNAME/front-despacho:latest"
             
-            # 4. Ejecutar el nuevo contenedor en el puerto 80
+            # Desplegar el contenedor en el puerto 80
             docker run -d \
-              --name front_container \
+              --name frontend-container \
               -p 80:80 \
               --restart always \
-              ${{ secrets.DOCKERHUB_USERNAME }}/front_despacho:latest
+              "$DOCKERHUB_USERNAME/front-despacho:latest"
+            
+            # Limpieza de imágenes huérfanas para ahorrar espacio
+            docker image prune -f

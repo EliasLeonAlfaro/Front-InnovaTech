@@ -1,28 +1,23 @@
-#Dockerfile frontend
-
-#definimos imagen base desde donde se iniciara el contenedor,
-#version de node.js y el sistema operativo
+# --- ETAPA 1: COMPILACIÓN ---
 FROM node:20-alpine AS build
 WORKDIR /app
-#copiar archivos de dependencias para aprovechar la caché de docker
-COPY package.json ./
-#instalacion de dependencias
-RUN npm ci
-#copiar el resto de codigo
-COPY . .
-#compilar app
+
+# Copiamos los manifiestos apuntando a la subcarpeta interna
+COPY ./front_despacho/package*.json ./
+RUN npm install
+
+# Copiamos el resto del código fuente del frontend
+COPY ./front_despacho/ ./
 RUN npm run build
 
-#Nginx
-FROM nginx:1.25-alpine
-#copiar archivos estaticos desde etapa anterior
+# --- ETAPA 2: SERVIDOR PRODUCCIÓN ---
+FROM nginx:alpine
+
+# Copiamos TU archivo de configuración (el que tiene el reverse proxy de arriba)
+COPY ./front_despacho/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copiamos los archivos compilados en la etapa 1 al directorio de Nginx
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-#ajustar permisos de "minimo privilegio"
-RUN touch /var/run/nginx.pid && \
-    chown -R nginx:nginx /var/run/nginx.pid /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
-# Cambiar al usuario sin privilegios incorporado en la imagen de Nginx
-USER nginx
-# Exponer el puerto estándar HTTP
+
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
