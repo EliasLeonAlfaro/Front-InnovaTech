@@ -23,9 +23,10 @@ jobs:
       - name: Construir y Subir Imagen Docker (Frontend)
         uses: docker/build-push-action@v5
         with:
-          # ➡️ Mantenemos el contexto en la raíz para que rastree todo el árbol
+          # ➡️ Al ser la raíz, el contexto es un punto limpio
           context: .
-          file: ./front_despacho/Dockerfile
+          # ➡️ Apuntamos al Dockerfile que está directamente en tu raíz
+          file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/front-despacho:latest
 
@@ -42,19 +43,15 @@ jobs:
 
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             
-            # Detener y eliminar contenedor antiguo si existe
             docker stop frontend-container || true
             docker rm frontend-container || true
             
-            # Descargar la nueva imagen construida por el pipeline
             docker pull "$DOCKERHUB_USERNAME/front-despacho:latest"
             
-            # Desplegar el contenedor en el puerto 80
             docker run -d \
               --name frontend-container \
               -p 80:80 \
               --restart always \
               "$DOCKERHUB_USERNAME/front-despacho:latest"
             
-            # Limpieza de imágenes huérfanas para ahorrar espacio
             docker image prune -f
