@@ -17,6 +17,7 @@ RUN npm run build
 FROM nginx:1.25-alpine
 #copiar archivos estaticos desde etapa anterior
 COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 #ajustar permisos de "minimo privilegio"
 RUN touch /var/run/nginx.pid && \
     chown -R nginx:nginx /var/run/nginx.pid /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
