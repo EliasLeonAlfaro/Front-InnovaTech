@@ -2,12 +2,12 @@ import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import axios from "axios";
 
-
 export const FormDespacho = ({ venta, onClose }) => {
   const { register, handleSubmit } = useForm();
 
   const onSubmit = async (data) => {
     console.log("onSubmit ejecutado");
+
     const jsonData = {
       fechaDespacho: data.fechaDespacho,
       patenteCamion: data.patenteCamion,
@@ -22,25 +22,33 @@ export const FormDespacho = ({ venta, onClose }) => {
       despachoGenerado: true,
     };
 
-    console.log("Datos del formulario:", jsonData);
+    console.log("Datos del formulario para despacho:", jsonData);
 
     try {
+      // ➡️ CORREGIDO: Ruta relativa para Ventas (Nginx lo mapea internamente al puerto 8086)
       await axios.put(
-        `http://100.54.7.173:8086/api/v1/ventas/${venta.idVenta}`,
+        `/api/ventas/v1/ventas/${venta.idVenta}`,
         jsonDataSales,
         {
-          headers:{
+          headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
-      }
+          }
         }
       );
-      await axios.post("http://100.54.7.173:8085/api/v1/despachos", jsonData, {
-        headers:{
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-    }
-      });
+
+      // ➡️ CORREGIDO: Ruta relativa para Despachos (Nginx lo mapea internamente al puerto 8085)
+      await axios.post(
+        "/api/despachos/v1/despachos",
+        jsonData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
+      );
+
       Swal.fire({
         title: "Despacho registrado 🛻!",
         text: "El despacho ha sido generado con éxito en la base de datos",
@@ -49,9 +57,16 @@ export const FormDespacho = ({ venta, onClose }) => {
       });
     } catch (error) {
       console.error("Error en la solicitud:", error);
+      Swal.fire({
+        title: "Error de conexión",
+        text: "Hubo un problema al intentar comunicarse con los microservicios mediante Nginx.",
+        icon: "error",
+        confirmButtonText: "Entendido",
+      });
     }
     onClose();
   };
+
   return (
     <>
       <form
@@ -61,6 +76,7 @@ export const FormDespacho = ({ venta, onClose }) => {
         <div className="mx-auto text-3xl font-bold mb-10 text-teal-600">
           Ingreso de orden de despacho
         </div>
+
         <div className="mb-5">
           <label className="block font-bold mb-2">Fecha de despacho</label>
           <input
@@ -70,6 +86,7 @@ export const FormDespacho = ({ venta, onClose }) => {
             {...register("fechaDespacho", { required: true })}
           />
         </div>
+
         <div className="mb-5">
           <label className="block font-bold mb-2">Patente de camión</label>
           <input
@@ -79,6 +96,7 @@ export const FormDespacho = ({ venta, onClose }) => {
             {...register("patenteCamion", { required: true })}
           />
         </div>
+
         <div className="mb-5">
           <label className="block font-bold mb-2">
             Orden de compra asociado
@@ -87,30 +105,32 @@ export const FormDespacho = ({ venta, onClose }) => {
             type="number"
             disabled={true}
             value={venta.idVenta}
-            className="border border-gray-300 rounded-lg block w-full text-slate-400 p-1"
+            className="border border-gray-300 rounded-lg block w-full text-slate-400 p-1 bg-gray-50"
           />
         </div>
+
         <div className="mb-5">
           <label className="block font-bold mb-2">Dirección de entrega</label>
           <input
             type="text"
             disabled={true}
             value={venta.direccionCompra}
-            className="border border-gray-300 rounded-lg block w-full text-slate-400 p-1"
+            className="border border-gray-300 rounded-lg block w-full text-slate-400 p-1 bg-gray-50"
           />
         </div>
+
         <div className="mb-5">
           <label className="block font-bold mb-2">Valor de compra</label>
           <input
             type="number"
             value={venta.valorCompra}
-            className="border border-gray-300 rounded-lg block w-full text-slate-400 p-1"
+            className="border border-gray-300 rounded-lg block w-full text-slate-400 p-1 bg-gray-50"
             disabled={true}
           />
         </div>
 
         <button
-          className="py-6 px-14 rounded-lg bg-teal-600 text-white font-bold mb-14"
+          className="py-6 px-14 rounded-lg bg-teal-600 text-white font-bold mb-14 hover:bg-teal-700 transition-colors"
           type="submit"
         >
           Asignar despacho
