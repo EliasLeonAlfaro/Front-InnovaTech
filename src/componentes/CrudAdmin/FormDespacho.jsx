@@ -27,7 +27,7 @@ export const FormDespacho = ({ venta, onClose }) => {
     try {
       // ➡️ CORREGIDO: Ruta relativa para Ventas (Nginx lo mapea internamente al puerto 8086)
       await axios.put(
-        `/api/ventas/v1/ventas/${venta.idVenta}`,
+        `/api/v1/ventas/${venta.idVenta}`,
         jsonDataSales,
         {
           headers: {
@@ -39,7 +39,7 @@ export const FormDespacho = ({ venta, onClose }) => {
 
       // ➡️ CORREGIDO: Ruta relativa para Despachos (Nginx lo mapea internamente al puerto 8085)
       await axios.post(
-        "/api/despachos/v1/despachos",
+        "/api/v1/despachos",
         jsonData,
         {
           headers: {

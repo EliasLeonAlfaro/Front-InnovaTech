@@ -10,7 +10,7 @@ export const TableCompras = () => {
   const compras = async () => {
     try {
       // ➡️ CORREGIDO: Cambiamos la IP pública por la ruta relativa manejada por Nginx (Manda al puerto 8086)
-      const response = await axios.get("/api/ventas/v1/ventas", {
+      const response = await axios.get("/api/v1/ventas", {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'

@@ -10,7 +10,7 @@ export const TableDespachos = () => {
   const despacho = async () => {
     try {
       // ➡️ CORREGIDO: Cambiamos la IP pública y puerto por el proxy relativo de Nginx (Puerto 8085 interno)
-      const response = await axios.get("/api/despachos/v1/despachos", {
+      const response = await axios.get("/api/v1/despachos", {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
