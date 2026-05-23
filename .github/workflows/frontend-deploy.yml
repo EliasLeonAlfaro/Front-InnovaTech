@@ -24,7 +24,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           # ➡️ CORREGIDO: El contexto y el archivo apuntan estrictamente a la carpeta del front
-          context: ./front_despacho
+          context: .
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/front-despacho:latest
