@@ -9,10 +9,10 @@ RUN npm run build
 # 2. Etapa de producción (Servidor Nginx)
 FROM nginx:alpine
 
-# ➡️ ESTA LÍNEA ES CRÍTICA: Copia tu nginx.conf personalizado borrando el de fábrica
-COPY front_despacho/nginx.conf /etc/nginx/nginx.conf
+# ➡️ CORREGIDO: Usamos ./nginx.conf porque está en la misma carpeta que este Dockerfile
+COPY ./nginx.conf /etc/nginx/nginx.conf
 
-# Copia los archivos compilados de React
+# Copia los archivos compilados de React al directorio de Nginx
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
