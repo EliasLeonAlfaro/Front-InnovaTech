@@ -9,7 +9,7 @@ services:
     container_name: front_despacho_container
     restart: always
 
-    # 2. Expone el puerto público estándar (80) hacia internet
+    # 2. Expone el puerto público estándar (80) hacia internetaaaaaa
     ports:
       - "80:80"
 
