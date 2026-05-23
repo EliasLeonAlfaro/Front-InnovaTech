@@ -13,11 +13,11 @@ services:
     ports:
       - "80:80"
 
-    # 3. Variables de entorno (Opcional, por si tu React maneja configuraciones dinámicas)
+    # 3. Variables de entorno
     environment:
       - NODE_ENV=production
 
-    # 4. Red interna (Opcional: si en local quieres que se conecte al compose del back)
+    # 4. Red interna
     networks:
       - app-network
 
