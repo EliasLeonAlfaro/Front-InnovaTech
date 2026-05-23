@@ -3,14 +3,14 @@ import axios from "axios";
 import { Modal } from "./Modal";
 import { FormCierreDespacho } from "./FormCierreDespacho";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 
 export const TableDespachos = () => {
   const [despachos, setDespachos] = useState([]);
 
   const despacho = async () => {
     await axios
-      .get("${API_BASE_URL}/api/v1/despachos", {
+      .get("http://10.0.134.21:8085/api/v1/despachos", {
         headers:{
               'Content-Type': 'application/json',
               'Accept': 'application/json'

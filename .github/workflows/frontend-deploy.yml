@@ -23,10 +23,9 @@ jobs:
       - name: Construir y Subir Imagen Docker (Frontend)
         uses: docker/build-push-action@v5
         with:
-          # ➡️ Al ser la raíz, el contexto es un punto limpio
-          context: .
-          # ➡️ Apuntamos al Dockerfile que está directamente en tu raíz
-          file: ./Dockerfile
+          # ➡️ CORREGIDO: El contexto y el archivo apuntan estrictamente a la carpeta del front
+          context: ./front_despacho
+          file: ./front_despacho/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/front-despacho:latest
 

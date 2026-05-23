@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export const FormDespacho = ({ venta, onClose }) => {
   const { register, handleSubmit } = useForm();
 
@@ -26,7 +26,7 @@ export const FormDespacho = ({ venta, onClose }) => {
 
     try {
       await axios.put(
-        `${API_BASE_URL}/api/v1/ventas/${venta.idVenta}`,
+        `http://10.0.134.21:8086/api/v1/ventas/${venta.idVenta}`,
         jsonDataSales,
         {
           headers:{
@@ -35,7 +35,7 @@ export const FormDespacho = ({ venta, onClose }) => {
       }
         }
       );
-      await axios.post("${API_BASE_URL}/api/v1/despachos", jsonData, {
+      await axios.post("http://10.0.134.21:8085/api/v1/despachos", jsonData, {
         headers:{
           'Content-Type': 'application/json',
           'Accept': 'application/json'
