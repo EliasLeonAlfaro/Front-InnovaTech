@@ -20,7 +20,7 @@ export const FormCierreDespacho = ({ despacho, onClose }) => {
     try {
       // ➡️ CORREGIDO: Cambiamos la IP pública y puerto por la ruta del proxy de Nginx
       await axios.put(
-        `/api/despachos/v1/despachos/${despacho.idDespacho}`,
+        `/api/v1/despachos/${despacho.idDespacho}`,
         jsonData,
         {
           headers: {
