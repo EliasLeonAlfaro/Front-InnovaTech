@@ -9,8 +9,9 @@ RUN npm run build
 # 2. Etapa de producción (Servidor Nginx)
 FROM nginx:alpine
 
-# ➡️ CORREGIDO: Usamos ./nginx.conf porque está en la misma carpeta que este Dockerfile
-COPY ./nginx.conf /etc/nginx/nginx.conf
+# ❌ LÍNEA VIEJA CON ERROR: COPY ./nginx.conf /etc/nginx/nginx.conf
+# ➡️ LÍNEA CORREGIDA: Se monta obligatoriamente en la carpeta conf.d/default.conf
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copia los archivos compilados de React al directorio de Nginx
 COPY --from=build /app/dist /usr/share/nginx/html
