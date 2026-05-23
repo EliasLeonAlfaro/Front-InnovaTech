@@ -2,7 +2,6 @@ import { useForm } from "react-hook-form";
 import Swal from "sweetalert2";
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export const FormCierreDespacho = ({ despacho, onClose }) => {
   const { register, handleSubmit } = useForm();
@@ -18,7 +17,7 @@ export const FormCierreDespacho = ({ despacho, onClose }) => {
 
     try {
       await axios.put(
-        `${API_BASE_URL}/api/v1/despachos/${despacho.idDespacho}`,
+        `http://10.0.134.21:8085/api/v1/despachos/${despacho.idDespacho}`,
         jsonData,
         {
           headers:{
