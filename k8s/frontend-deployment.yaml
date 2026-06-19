@@ -1,4 +1,3 @@
-#para hacer push
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,6 +18,7 @@ spec:
           image: 308769698189.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest
           ports:
             - containerPort: 8080
+            - containerPort: 8443
           resources:
             requests:
               cpu: "100m"
@@ -39,6 +39,11 @@ spec:
     app: frontend
   type: LoadBalancer
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 8080
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 8443
