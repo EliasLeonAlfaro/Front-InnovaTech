@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  labels:
+    app: frontend
+spec:
+  replicas: 2 # Tolerancia a fallos: Mínimo 2 réplicas distribuidas
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: TU_USUARIO_DOCKERHUB/front-despacho:latest # Se actualizará dinámicamente en el pipeline
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "256m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  type: LoadBalancer # ➡️ CREA EL ALB/CLB DE AWS PÚBLICO AUTOMÁTICAMENTE
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: frontend

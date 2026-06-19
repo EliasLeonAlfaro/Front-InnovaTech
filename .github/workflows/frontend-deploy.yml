@@ -1,13 +1,17 @@
-name: Frontend CI/CD (Deploy to EC2 via SSH)
+name: Frontend CI/CD (AWS EKS Deploy)
 
 on:
   push:
     branches:
       - deploy
 
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: TU_NOMBRE_DE_CLUSTER_EKS # ⚠️ Cambia esto por el nombre exacto de tu clúster
+
 jobs:
-  deploy-frontend:
-    name: Build & Deploy Frontend
+  build-and-deploy:
+    name: Build, Push & Deploy Frontend to EKS
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/deploy'
     steps:
@@ -20,37 +24,39 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Crítico para AWS Academy
+          aws-region: ${{ env.AWS_REGION }}
+
+      # -------------------------------------------------------------
+      # COMPILACIÓN Y ENVÍO A DOCKER HUB
+      # -------------------------------------------------------------
       - name: Construir y Subir Imagen Docker (Frontend)
         uses: docker/build-push-action@v5
         with:
-          # ➡️ CORREGIDO: El contexto y el archivo apuntan estrictamente a la carpeta del front
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/front-despacho:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/front-despacho:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/front-despacho:${{ github.sha }}
 
-      - name: Despliegue en AWS EC2 vía SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.AWS_EC2_FRONTEND_IP }}
-          username: ec2-user
-          key: ${{ secrets.AWS_PRIVATE_KEY }}
-          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
-          script: |
-            export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
-            export DOCKERHUB_TOKEN="${{ secrets.DOCKERHUB_TOKEN }}"
+      # -------------------------------------------------------------
+      # DESPLIEGUE EN AWS EKS
+      # -------------------------------------------------------------
+      - name: Configurar kubeconfig para EKS
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
-            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            
-            docker stop frontend-container || true
-            docker rm frontend-container || true
-            
-            docker pull "$DOCKERHUB_USERNAME/front-despacho:latest"
-            
-            docker run -d \
-              --name frontend-container \
-              -p 80:80 \
-              --restart always \
-              "$DOCKERHUB_USERNAME/front-despacho:latest"
-            
-            docker image prune -f
+      - name: Desplegar Manifiestos actualizados en EKS
+        run: |
+          # Reemplaza la imagen estática por la recién construida con el tag único del commit
+          sed -i 's|image: .*front-despacho:latest|image: ${{ secrets.DOCKERHUB_USERNAME }}/front-despacho:${{ github.sha }}|g' k8s/frontend.yml
+          
+          # Aplicar despliegue, balanceador y autoescalado en Kubernetes
+          kubectl apply -f k8s/frontend.yml
+          kubectl apply -f k8s/autoscaling.yml

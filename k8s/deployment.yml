@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: backend
+namespace: default
+spec:
+  replicas: 2 # Mínimo 2 réplicas para asegurar Alta Disponibilidad
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend-container
+        # El pipeline reemplazará el tag 'latest' por el SHA del commit de forma automática
+        image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/mi-repo-backend:latest
+        ports:
+        - containerPort: 3000 # El puerto en el que escucha tu backend
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "256m"
+            memory: "256Mi"
