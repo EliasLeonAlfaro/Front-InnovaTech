@@ -1,56 +1,82 @@
-name: Frontend CI/CD (Deploy to EC2 via SSH)
+name: Frontend CI/CD (ECR + EKS)
 
 on:
   push:
     branches:
       - deploy
 
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: innovatech
+  K8S_NAMESPACE: innovatech
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  ECR_REPOSITORY: front-innovatech
+
 jobs:
-  deploy-frontend:
-    name: Build & Deploy Frontend
+  build-and-deploy:
+    name: Build, Push & Deploy Frontend
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/deploy'
+
     steps:
-      - name: Checkout del código
+      - name: Checkout del codigo
         uses: actions/checkout@v4
 
-      - name: Iniciar sesión en Docker Hub
-        uses: docker/login-action@v3
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Construir y Subir Imagen Docker (Frontend)
+      - name: Verificar identidad AWS
+        run: aws sts get-caller-identity
+
+      - name: Login Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build y Push imagen Frontend
         uses: docker/build-push-action@v5
         with:
-          # ➡️ CORREGIDO: El contexto y el archivo apuntan estrictamente a la carpeta del front
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/front-despacho:latest
+          tags: 308769698189.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest
 
-      - name: Despliegue en AWS EC2 vía SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.AWS_EC2_FRONTEND_IP }}
-          username: ec2-user
-          key: ${{ secrets.AWS_PRIVATE_KEY }}
-          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
-          script: |
-            export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
-            export DOCKERHUB_TOKEN="${{ secrets.DOCKERHUB_TOKEN }}"
+      - name: Instalar kubectl
+        uses: azure/setup-kubectl@v4
 
-            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            
-            docker stop frontend-container || true
-            docker rm frontend-container || true
-            
-            docker pull "$DOCKERHUB_USERNAME/front-despacho:latest"
-            
-            docker run -d \
-              --name frontend-container \
-              -p 80:80 \
-              --restart always \
-              "$DOCKERHUB_USERNAME/front-despacho:latest"
-            
-            docker image prune -f
+      - name: Configurar conexion con EKS
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name innovatech
+
+      - name: Crear namespace si no existe
+        run: |
+          kubectl create namespace innovatech --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Pausar HPA frontend durante deploy
+        run: |
+          kubectl delete hpa frontend-hpa -n innovatech --ignore-not-found
+
+      - name: Aplicar manifiesto frontend
+        run: |
+          kubectl apply -f k8s/frontend-deployment.yaml
+
+      - name: Actualizar imagen frontend
+        run: |
+          kubectl set image deployment/frontend frontend=308769698189.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest -n innovatech
+
+      - name: Reiniciar frontend
+        run: |
+          kubectl rollout restart deployment frontend -n innovatech
+
+      - name: Verificar rollout frontend
+        run: |
+          kubectl rollout status deployment/frontend -n innovatech --timeout=5m
+          kubectl get pods -n innovatech
+          kubectl get svc -n innovatech
+
+      - name: Activar HPA frontend
+        run: |
+          kubectl apply -f k8s/hpa.yaml
+          kubectl get hpa -n innovatech
