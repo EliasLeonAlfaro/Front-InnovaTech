@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: 308769698189.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest
+          image: 578375889933.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest
           ports:
             - containerPort: 8080
             - containerPort: 8443
