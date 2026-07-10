@@ -41,7 +41,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: 308769698189.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest
+          tags: 578375889933.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest
 
       - name: Instalar kubectl
         uses: azure/setup-kubectl@v4
@@ -64,7 +64,7 @@ jobs:
 
       - name: Actualizar imagen frontend
         run: |
-          kubectl set image deployment/frontend frontend=308769698189.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest -n innovatech
+          kubectl set image deployment/frontend frontend=578375889933.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest -n innovatech
 
       - name: Reiniciar frontend
         run: |
