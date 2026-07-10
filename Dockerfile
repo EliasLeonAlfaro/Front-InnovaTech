@@ -14,7 +14,7 @@ RUN npm run build
 # Etapa 2: Servir con Nginx + SSL self-signed
 FROM nginx:alpine
 
-# Instalar openssl para generar certificado autofirmado
+# Instalar openssl para generar certificado autofirmadoaaa
 RUN apk add --no-cache openssl
 
 # Copiar frontend compilado
