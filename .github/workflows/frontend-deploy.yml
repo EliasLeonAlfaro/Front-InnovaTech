@@ -48,7 +48,7 @@ jobs:
 
       - name: Configurar conexion con EKS
         run: |
-          aws eks update-kubeconfig --region us-east-1 --name innovatech
+          aws eks update-kubeconfig --region us-east-1 --name examen-eks
 
       - name: Crear namespace si no existe
         run: |
