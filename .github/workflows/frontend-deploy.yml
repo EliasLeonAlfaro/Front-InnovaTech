@@ -41,7 +41,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: 578375889933.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest
+          tags: 341382564064.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest
 
       - name: Instalar kubectl
         uses: azure/setup-kubectl@v4
