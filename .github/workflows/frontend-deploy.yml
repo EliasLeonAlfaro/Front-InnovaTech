@@ -64,7 +64,7 @@ jobs:
 
       - name: Actualizar imagen frontend
         run: |
-          kubectl set image deployment/frontend frontend=578375889933.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest -n innovatech
+          kubectl set image deployment/frontend frontend=341382564064.dkr.ecr.us-east-1.amazonaws.com/front-innovatech:latest -n innovatech
 
       - name: Reiniciar frontend
         run: |
